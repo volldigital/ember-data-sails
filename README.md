@@ -1,5 +1,12 @@
-<<<<<<< HEAD
-# ember-data-sails
+# ember-data-sails (fork)
+<br>
+
+## The goal of this fork is to enable usage with Ember 4.
+<br>
+<br>
+<br>
+
+## The following text is the same as the original repo https://github.com/huafu/ember-data-sails:
 
 Adapters and tools for Ember to work well with Sails. Provides `SailsSocketService`, `SailsRESTAdapter`, `SailsSocketAdapter`, `SailsSerializer` and extends the store so that you can subscribe for records while pushing a payload.
 
@@ -14,9 +21,9 @@ Adapters and tools for Ember to work well with Sails. Provides `SailsSocketServi
         // do something with the response
       });
     ```
-    
+
     It'll use by default the `sails.io.js` located at `<hostname>:1337/js/dependencies/sails.io.js`, but you can change this using configuration in `config/environment.js` file:
-    
+
     ```js
     ENV.APP = {
       // if you want some useful debug information related to sails
@@ -29,22 +36,22 @@ Adapters and tools for Ember to work well with Sails. Provides `SailsSocketServi
       }
     }
     ```
-    
+
     Also don't forget to add the rules for CSP:
-    
+
     ```js
     // allow to fetch the script
     ENV.contentSecurityPolicy['script-src'] += ' http://localhost:1337';
     // allow the websocket to connect
     ENV.contentSecurityPolicy['connect-src'] += ' http://localhost:1337 ws://localhost:1337';
     ```
-    
-    
+
+
 * `DS.SailsSocketAdapter`: use this adapter when you want to use sockets for your model(s)
 * `DS.SailsRESTAdapter`: use this adapter when you want to use sockets for your model(s)
 * `DS.SailsSerializer`: used by default when you use a Sails adapter, you shouldn't need to access it but it's there in case
 * `DS.Store.pushPayload([type], payload, [subscribe=false])`: as the original one from Ember Data, except it accepts an additional parameter which, when set to `true`, will tell the socket adapter to subscribe to the pushed records (see below)
-* `DS.Store.subscribe(type, ids)`: tells the sails socket adapter to subscribe to those models (see below) 
+* `DS.Store.subscribe(type, ids)`: tells the sails socket adapter to subscribe to those models (see below)
 
 
 ## Installation
@@ -68,7 +75,7 @@ Adapters and tools for Ember to work well with Sails. Provides `SailsSocketServi
        //at the very bottom if you want to server other routes through Sails, because they are matched in order
     -  '/*': { controller: 'App', action: 'serve', skipAssets: true, skipRegex: /^\/api\/.*$/ }
     +  '/*': { controller: 'App', action: 'serve', skipAssets: true, skipRegex: /^\/(api\/.*|__getcookie|csrfToken)$/ }
-     
+
        //You could also just serve the index view directly if you want
        //'/*': { view: 'index', skipAssets: true, skipRegex: /^\/api\/.*$/ }
     ```
@@ -77,7 +84,7 @@ Adapters and tools for Ember to work well with Sails. Provides `SailsSocketServi
     ```js
     // file: app/adapters/application.js
     import SailsSocketAdapter from 'ember-data-sails/adapters/sails-socket';
-    
+
     export default SailsSocketAdapter.extend({
       /**
        * Whether to use CSRF tokens or not
@@ -102,7 +109,7 @@ Adapters and tools for Ember to work well with Sails. Provides `SailsSocketServi
     ```js
     // file: app/adapters/application.js
     import SailsRESTAdapter from 'ember-data-sails/adapters/sails-rest';
-    
+
     export default SailsRESTAdapter.extend({
       /**
        * The host of your API
@@ -134,7 +141,7 @@ properties of the adapter to do a request on the API.
     * `subscribeMethod`: `get`, `post`, ... defaults to `post`
     * `subscribeEndpoint`: the endpoint to do the request on, defaults to `/socket/subscribe`
     * Of course you'll need to create a basic controller in your Sails API. Here is an example:
-    
+
         ```js
         // api/controllers/SocketController.js
         module.exports = {
@@ -174,56 +181,3 @@ properties of the adapter to do a request on the API.
 _While this was first inspired from [ember-data-sails-adapter](https://github.com/bmac/ember-data-sails-adapter), it has now been fully re-written, with a totally different approach, and, as of the day this was written, with more features._
 
 * <img src="https://s.gravatar.com/avatar/950590a0d4bc96f4a239cac955112eeb?s=24" valign="absmiddle"> [Huafu Gandon](http://huafu.github.com) - [@huafu_g](https://twitter.com/huafu_g)
-=======
-my-addon
-==============================================================================
-
-[Short description of the addon.]
-
-Installation
-------------------------------------------------------------------------------
-
-```
-ember install my-addon
-```
-
-
-Usage
-------------------------------------------------------------------------------
-
-[Longer description of how to use the addon in apps.]
-
-
-Contributing
-------------------------------------------------------------------------------
-
-### Installation
-
-* `git clone <repository-url>`
-* `cd my-addon`
-* `npm install`
-
-### Linting
-
-* `npm run lint:hbs`
-* `npm run lint:js`
-* `npm run lint:js -- --fix`
-
-### Running tests
-
-* `ember test` – Runs the test suite on the current Ember version
-* `ember test --server` – Runs the test suite in "watch mode"
-* `ember try:each` – Runs the test suite against multiple Ember versions
-
-### Running the dummy application
-
-* `ember serve`
-* Visit the dummy application at [http://localhost:4200](http://localhost:4200).
-
-For more information on using ember-cli, visit [https://ember-cli.com/](https://ember-cli.com/).
-
-License
-------------------------------------------------------------------------------
-
-This project is licensed under the [MIT License](LICENSE.md).
->>>>>>> da52bfe... message

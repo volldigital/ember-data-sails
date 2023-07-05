@@ -1,3 +1,3 @@
-import SailsRESTAdapter from '@brickclick/ember-data-sails/adapters/sails-rest';
+import SailsRESTAdapter from "@waldemar-p/ember-data-sails/adapters/sails-rest";
 
 export default SailsRESTAdapter;
