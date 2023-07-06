@@ -1,12 +1,13 @@
 /* global io */
-import { debug, warn } from "@ember/debug";
-import Error from "@ember/error";
-import { set, setProperties } from "@ember/object";
-import Evented from "@ember/object/evented";
-import { bind, later, next } from "@ember/runloop";
-import Service from "@ember/service";
-import RSVP from "rsvp";
-import { tracked } from "@glimmer/tracking";
+import { debug, warn } from '@ember/debug';
+import Error from '@ember/error';
+import { set, setProperties } from '@ember/object';
+import Evented from '@ember/object/evented';
+import { bind, later, next } from '@ember/runloop';
+import Service from '@ember/service';
+import { tracked } from '@glimmer/tracking';
+import classic from 'ember-classic-decorator';
+import RSVP from 'rsvp';
 
 /**
  * Shortcut to know if an object is alive or not
@@ -14,6 +15,7 @@ import { tracked } from "@glimmer/tracking";
  * @since 0.0.4
  * @param {Ember.Object} obj The object to test
  * @returns {Boolean} Returns `true` if the object is still alive, else `false`
+ * @classic
  * @private
  */
 function isAlive(obj) {
@@ -30,6 +32,7 @@ function isAlive(obj) {
  * @uses WithLoggerMixin
  * @constructor
  */
+@classic
 export default class SailsSocketService extends Service.extend(Evented) {
   /**
    * Holds our sails socket
@@ -56,8 +59,8 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @type String
    */
   get socketUrl() {
-    const script = document.getElementById("eds-sails-io-script");
-    return script.src.replace(/^([^:]+:\/\/[^/]+).*$/g, "$1");
+    const script = document.getElementById('eds-sails-io-script');
+    return script.src.replace(/^([^:]+:\/\/[^/]+).*$/g, '$1');
   }
 
   /**
@@ -95,12 +98,13 @@ export default class SailsSocketService extends Service.extend(Evented) {
   }
 
   /**
-   * @since 0.0.4
+   * @since 0.0.1
    * @method init
    * @inheritDoc
    */
-  constructor() {
-    super();
+  init() {
+    super.init(...arguments);
+
     this._listeners = {};
     this._sailsSocket = null;
     setProperties(this, {
@@ -137,13 +141,13 @@ export default class SailsSocketService extends Service.extend(Evented) {
     let sockMethod;
     if (listen && !this._listeners[event]) {
       meta = {
-        method: bind(this, "_handleSocketMessage", event),
+        method: bind(this, '_handleSocketMessage', event),
         isListening: false,
       };
       this._listeners[event] = meta;
-      sockMethod = "add";
+      sockMethod = 'add';
     } else if (!listen && (meta = this._listeners[event])) {
-      sockMethod = "remove";
+      sockMethod = 'remove';
     }
     if (sockMethod) {
       if (this.isConnected) {
@@ -152,9 +156,9 @@ export default class SailsSocketService extends Service.extend(Evented) {
         } else {
           delete this._listeners[event];
         }
-        this._sailsSocket._raw[sockMethod + "EventListener"](
+        this._sailsSocket._raw[sockMethod + 'EventListener'](
           event,
-          meta.method
+          meta.method,
         );
       } else if (!listen) {
         delete this._listeners[event];
@@ -177,7 +181,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
    */
   request(method /*, arg*/) {
     const args = [].slice.call(arguments, 1);
-    const incPending = bind(this, "incrementProperty", "pendingOperationCount");
+    const incPending = bind(this, 'incrementProperty', 'pendingOperationCount');
     method = method.toLowerCase();
     incPending(1);
     return new RSVP.Promise((resolve, reject) => {
@@ -194,7 +198,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
           socket[method].apply(socket, args);
         } else {
           incPending(-1);
-          reject(error ? error : new Error("Sails socket service destroyed"));
+          reject(error ? error : new Error('Sails socket service destroyed'));
         }
       });
     }, `getting the connected Sails socket for ${method} request on ${args[0]}`);
@@ -220,16 +224,16 @@ export default class SailsSocketService extends Service.extend(Evented) {
    */
   _connectedSocket(callback) {
     if (!isAlive(this)) {
-      warn("cannot get socket, service destroyed", false, {
-        id: "ember-data-sails.socket",
+      warn('cannot get socket, service destroyed', false, {
+        id: 'ember-data-sails.socket',
       });
-      next(this, callback, new Error("Sails socket service destroyed"));
+      next(this, callback, new Error('Sails socket service destroyed'));
     } else if (this.isConnected) {
-      debug("socket connected, giving it in next run loop");
+      debug('socket connected, giving it in next run loop');
       next(this, callback, null, this._sailsSocket);
     } else {
       debug(
-        "socket not connected, listening for connect event before giving it"
+        'socket not connected, listening for connect event before giving it',
       );
       if (!this._waitingForSockets) {
         this._waitingForSockets = [];
@@ -239,18 +243,18 @@ export default class SailsSocketService extends Service.extend(Evented) {
         return;
       }
       this.one(
-        "didConnect",
+        'didConnect',
         bind(this, function () {
           const callbacks = this._waitingForSockets;
           delete this._waitingForSockets;
           for (let i = 0; i < callbacks.length; i++) {
             callbacks[i].call(this, null, this._sailsSocket);
           }
-        })
+        }),
       );
       if (this.isInitialized) {
         debug(
-          "looks like we are initialized but not connected, reconnecting socket"
+          'looks like we are initialized but not connected, reconnecting socket',
         );
         this._reconnect();
       } else {
@@ -280,15 +284,15 @@ export default class SailsSocketService extends Service.extend(Evented) {
       const waitObject = bind(this, function () {
         if (this._sailsSocket._raw) {
           this._sailsSocket._raw.addEventListener(
-            "connect",
-            bind(this, "_handleSocketConnect")
+            'connect',
+            bind(this, '_handleSocketConnect'),
           );
           this._sailsSocket._raw.addEventListener(
-            "disconnect",
-            bind(this, "_handleSocketDisconnect")
+            'disconnect',
+            bind(this, '_handleSocketDisconnect'),
           );
           if (this._sailsSocket._raw.connected) {
-            next(this, "_handleSocketConnect");
+            next(this, '_handleSocketConnect');
           }
         } else {
           later(waitObject, 10);
@@ -352,8 +356,8 @@ export default class SailsSocketService extends Service.extend(Evented) {
       return;
     }
     this.trigger(
-      event + (message && message.verb ? "." + message.verb : ""),
-      message
+      event + (message && message.verb ? '.' + message.verb : ''),
+      message,
     );
   }
 
@@ -371,22 +375,22 @@ export default class SailsSocketService extends Service.extend(Evented) {
     if (!isAlive(this)) {
       return;
     }
-    debug("socket core object ready");
-    set(this, "isInitialized", true);
-    this.trigger("didInitialize");
+    debug('socket core object ready');
+    set(this, 'isInitialized', true);
+    this.trigger('didInitialize');
     this._sailsSocket = io.sails.connect(this.socketUrl);
     const waitObject = bind(this, function () {
       if (this._sailsSocket._raw) {
         this._sailsSocket._raw.addEventListener(
-          "connect",
-          bind(this, "_handleSocketConnect")
+          'connect',
+          bind(this, '_handleSocketConnect'),
         );
         this._sailsSocket._raw.addEventListener(
-          "disconnect",
-          bind(this, "_handleSocketDisconnect")
+          'disconnect',
+          bind(this, '_handleSocketDisconnect'),
         );
         if (this._sailsSocket._raw.connected) {
-          next(this, "_handleSocketConnect");
+          next(this, '_handleSocketConnect');
         }
       } else {
         later(waitObject, 10);
@@ -407,8 +411,8 @@ export default class SailsSocketService extends Service.extend(Evented) {
       return;
     }
     this._bindListeners();
-    set(this, "isConnected", true);
-    this.trigger("didConnect");
+    set(this, 'isConnected', true);
+    this.trigger('didConnect');
   }
 
   /**
@@ -422,8 +426,8 @@ export default class SailsSocketService extends Service.extend(Evented) {
     if (!isAlive(this)) {
       return;
     }
-    set(this, "isConnected", false);
-    this.trigger("didDisconnect");
+    set(this, 'isConnected', false);
+    this.trigger('didDisconnect');
     this._unbindListeners();
   }
 
@@ -437,9 +441,9 @@ export default class SailsSocketService extends Service.extend(Evented) {
   _load() {
     if (!this._loaded) {
       if (window.io && io.sails && io.sails.emberDataSailsReady) {
-        next(this, "_handleSocketReady");
+        next(this, '_handleSocketReady');
       } else {
-        later(this, "_load", 10);
+        later(this, '_load', 10);
       }
     }
   }

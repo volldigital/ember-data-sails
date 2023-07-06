@@ -5,10 +5,10 @@ import { set } from '@ember/object';
 import Evented from '@ember/object/evented';
 import { bind, schedule } from '@ember/runloop';
 import { camelize } from '@ember/string';
+import { cached } from '@glimmer/tracking';
+import classic from 'ember-classic-decorator';
 import { pluralize } from 'ember-inflector';
 import RSVP from 'rsvp';
-import { getOwner } from '@ember/owner';
-import { cached } from '@glimmer/tracking';
 
 /**
  * Base adapter for SailsJS adapters
@@ -17,16 +17,16 @@ import { cached } from '@glimmer/tracking';
  * @class SailsBaseAdapter
  * @extends RESTAdapter
  * @uses Ember.Evented
+ * @classic
  * @constructor
  */
-export default class SailsBase extends RESTAdapter.extend(Evented) {
-  get config() {
-    return getOwner(this).resolveRegistration('config:environment');
-  }
 
+@classic
+export default class SailsBase extends RESTAdapter.extend(Evented) {
   @cached
   get SAILS_LOG_LEVEL() {
-    return this.config.APP.SAILS_LOG_LEVEL;
+    console.log('SAILS_LOG_LEVEL appConfig', this.appConfig);
+    return this.appConfig?.SAILS_LOG_LEVEL || 'error';
   }
 
   /**
@@ -76,34 +76,6 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
    * @private
    */
   _csrfTokenLoadingPromise = null;
-
-  /**
-   * @since 1.0.0
-   * @method constructor
-   * @inheritDoc
-   */
-  constructor() {
-    super();
-
-    const levelMap = { notice: 'log' };
-    const minLevel = this.SAILS_LOG_LEVEL;
-    const LEVELS = 'debug info notice warn error'.split(' ');
-
-    let shouldLog = false;
-    LEVELS.forEach(function (level) {
-      if (level === minLevel) shouldLog = true;
-
-      if (shouldLog) {
-        this[level] = console.log.bind(levelMap[level] || level, '[ed-sails]');
-      } else {
-        this[level] = () => {};
-      }
-    });
-
-    console.log('this', this);
-
-    set(this, 'csrfToken', null);
-  }
 
   /**
    * Send a message using `_request` of extending class
@@ -290,5 +262,46 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
     }
     data._csrf = this.csrfToken;
     return data;
+  }
+
+  log(type) {
+    const LEVELS = 'debug info notice warn error'.split(' ');
+    const levelMap = { notice: 'log' };
+    const minLevel = this.SAILS_LOG_LEVEL;
+
+    console.log('minLevel', minLevel);
+
+    let shouldLog = false;
+    const isLevelLoggable = LEVELS.some((level) => {
+      if (level === minLevel) shouldLog = true;
+
+      return shouldLog && type === level;
+    });
+
+    if (isLevelLoggable) {
+      return console[levelMap[type] || type].bind(this, '[ember-data-sails]');
+    } else {
+      return () => {};
+    }
+  }
+
+  debug() {
+    return this.log('debug');
+  }
+
+  info() {
+    return this.log('info');
+  }
+
+  notice() {
+    return this.log('notice');
+  }
+
+  warn() {
+    return this.log('warn');
+  }
+
+  error() {
+    return this.log('error');
   }
 }

@@ -1,9 +1,9 @@
-import { debug, warn } from "@ember/debug";
-import { bind, debounce } from "@ember/runloop";
-import { inject as service } from "@ember/service";
-import { camelize } from "@ember/string";
-import { pluralize } from "ember-inflector";
-import SailsBaseAdapter from "./sails-base";
+import { debug, warn } from '@ember/debug';
+import { bind, debounce } from '@ember/runloop';
+import { inject as service } from '@ember/service';
+import { camelize } from '@ember/string';
+import { pluralize } from 'ember-inflector';
+import SailsBaseAdapter from './sails-base';
 
 /**
  * Adapter for SailsJS sockets
@@ -30,7 +30,7 @@ export default class App extends SailsBaseAdapter {
    * @property subscribeMethod
    * @type String
    */
-  subscribeMethod = "POST";
+  subscribeMethod = 'POST';
   /**
    * The path to send a request over the socket to update/setup subscriptions
    * Set this or subscribeMethod to `null` will disable this feature
@@ -38,7 +38,7 @@ export default class App extends SailsBaseAdapter {
    * @property subscribeEndpoint
    * @type String
    */
-  subscribeEndpoint = "/socket/subscribe";
+  subscribeEndpoint = '/socket/subscribe';
 
   /**
    * @since 1.0.0
@@ -46,8 +46,8 @@ export default class App extends SailsBaseAdapter {
    * @inheritDoc
    */
   constructor() {
-    super();
-    this.sailsSocket.on("didConnect", this, "fetchCSRFToken", true);
+    super(...arguments);
+    this.sailsSocket.on('didConnect', this, 'fetchCSRFToken', true);
   }
 
   /**
@@ -63,7 +63,7 @@ export default class App extends SailsBaseAdapter {
    * @private
    */
   _request(out, url, method, options) {
-    out.protocol = "socket";
+    out.protocol = 'socket';
     return this.sailsSocket.request(method, url, options.data);
   }
 
@@ -101,7 +101,7 @@ export default class App extends SailsBaseAdapter {
    */
   _fetchCSRFToken() {
     return this.sailsSocket
-      .request("get", this.csrfTokenPath.replace(/^\/?/, "/"))
+      .request('get', this.csrfTokenPath.replace(/^\/?/, '/'))
       .then(function (tokenObject) {
         return tokenObject._csrf;
       });
@@ -153,7 +153,7 @@ export default class App extends SailsBaseAdapter {
    */
   _handleSocketRecordDeleted(store, type, message) {
     const record = store.peekRecord(type.modelName, message.id);
-    if (record && typeof record.get("dirtyType") === "undefined") {
+    if (record && typeof record.get('dirtyType') === 'undefined') {
       record.unloadRecord();
     }
   }
@@ -174,16 +174,16 @@ export default class App extends SailsBaseAdapter {
       const store = this.store;
       const type = store.modelFor(model);
       socket.on(
-        eventName + ".created",
-        bind(this, "_handleSocketRecordCreated", store, type)
+        eventName + '.created',
+        bind(this, '_handleSocketRecordCreated', store, type),
       );
       socket.on(
-        eventName + ".updated",
-        bind(this, "_handleSocketRecordUpdated", store, type)
+        eventName + '.updated',
+        bind(this, '_handleSocketRecordUpdated', store, type),
       );
       socket.on(
-        eventName + ".destroyed",
-        bind(this, "_handleSocketRecordDeleted", store, type)
+        eventName + '.destroyed',
+        bind(this, '_handleSocketRecordDeleted', store, type),
       );
     }
   }
@@ -207,10 +207,10 @@ export default class App extends SailsBaseAdapter {
       if (!this._scheduledSubscriptions[key]) {
         this._scheduledSubscriptions[key] = {};
       }
-      id = "" + id;
+      id = '' + id;
       if (!this._scheduledSubscriptions[key][id]) {
         this._scheduledSubscriptions[key][id] = 0;
-        debounce(this, "_subscribeScheduled", 50);
+        debounce(this, '_subscribeScheduled', 50);
       }
     }
   }
@@ -241,8 +241,8 @@ export default class App extends SailsBaseAdapter {
       if (opt.subscribeEndpoint && opt.subscribeMethod) {
         debug(
           `asking the API to subscribe to some records of type ${Object.keys(
-            data
-          ).join(", ")}`
+            data,
+          ).join(', ')}`,
         );
         // ask the API to subscribe to those records
         this.fetchCSRFToken().then(() => {
@@ -250,11 +250,11 @@ export default class App extends SailsBaseAdapter {
           this.sailsSocket
             .request(opt.subscribeMethod, opt.subscribeEndpoint, payload)
             .then((result) => {
-              debug("subscription successful, result:", result);
+              debug('subscription successful, result:', result);
             })
             .catch((/* jwr */) => {
-              warn("error when trying to subscribe to some model(s)", false, {
-                id: "ember-data-sails.subscribe",
+              warn('error when trying to subscribe to some model(s)', false, {
+                id: 'ember-data-sails.subscribe',
               });
             });
         });
