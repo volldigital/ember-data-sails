@@ -41,63 +41,79 @@ export default class SailsSerializer extends RESTSerializer {
    * @method extractArray
    * @inheritDoc
    */
-  normalizeArrayResponse = blueprintsWrapMethod(
-    super.normalizeArrayResponse,
-    function (store, primaryType, payload) {
-      let newPayload = {};
-      newPayload[pluralize(primaryType.modelName)] = payload;
-      return super.normalizeArrayResponse(...arguments);
-    }
-  );
+  normalizeArrayResponse() {
+    const superMethod = super.normalizeArrayResponse;
+
+    return blueprintsWrapMethod(
+      superMethod,
+      function (store, primaryType, payload) {
+        let newPayload = {};
+        newPayload[pluralize(primaryType.modelName)] = payload;
+        return superMethod(...arguments);
+      }
+    );
+  }
 
   /**
    * @since 0.0.11
    * @method extractSingle
    * @inheritDoc
    */
-  normalizeSingleResponse = blueprintsWrapMethod(
-    super.normalizeSingleResponse,
-    function (store, primaryType, payload) {
-      if (payload === null) {
-        return super.normalizeSingleResponse.apply(this, arguments);
+  normalizeSingleResponse() {
+    const superMethod = super.normalizeSingleResponse;
+
+    return blueprintsWrapMethod(
+      superMethod,
+      function (store, primaryType, payload) {
+        if (payload === null) {
+          return superMethod.apply(this, arguments);
+        }
+        let newPayload = {};
+        newPayload[pluralize(primaryType.modelName)] = [payload];
+        return superMethod(...arguments);
       }
-      let newPayload = {};
-      newPayload[pluralize(primaryType.modelName)] = [payload];
-      return super.normalizeSingleResponse(...arguments);
-    }
-  );
+    );
+  }
 
   /**
    * @since 0.0.11
    * @method serializeIntoHash
    * @inheritDoc
    */
-  serializeIntoHash = blueprintsWrapMethod(
-    super.serializeIntoHash,
-    function (data, type, record, options) {
-      if (Object.keys(data).length > 0) {
-        this.error(
-          `trying to serialize multiple records in one hash for type ${type.modelName}`,
-          data
-        );
-        throw new Error(
-          "Sails does not accept putting multiple records in one hash"
-        );
+  serializeIntoHash() {
+    const superMethod = super.serializeIntoHash;
+
+    return blueprintsWrapMethod(
+      superMethod,
+      function (data, type, record, options) {
+        if (Object.keys(data).length > 0) {
+          this.error(
+            `trying to serialize multiple records in one hash for type ${type.modelName}`,
+            data
+          );
+          throw new Error(
+            "Sails does not accept putting multiple records in one hash"
+          );
+        }
+        const json = this.serialize(record, options);
+        _.merge(data, json);
       }
-      const json = this.serialize(record, options);
-      _.merge(data, json);
-    }
-  );
+    );
+  }
 
   /**
    * @since 0.0.11
    * @method normalize
    * @inheritDoc
    */
-  normalize = blueprintsWrapMethod(super.normalize, function (type) {
-    const normalized = super.normalize(...arguments);
-    return this._extractEmbeddedRecords(this, this.store, type, normalized);
-  });
+  normalize() {
+    const superMethod = super.normalize;
+
+    return blueprintsWrapMethod(superMethod, function (type) {
+      const normalized = superMethod(...arguments);
+      return this._extractEmbeddedRecords(this, this.store, type, normalized);
+    });
+  }
 
   /**
    * @since 0.0.15
