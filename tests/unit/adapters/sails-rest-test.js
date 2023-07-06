@@ -1,8 +1,11 @@
 import { run } from '@ember/runloop';
 import SailsRestAdapter from 'voll-ember-data-sails/adapters/sails-rest';
 import { module, test } from 'qunit';
+import { setupTest } from 'ember-qunit';
 
 module('SailsRestAdapter', function (hooks) {
+  setupTest(hooks);
+
   hooks.beforeEach(function () {
     this.subject = function (obj) {
       return run(SailsRestAdapter, 'create', obj || {});

@@ -3,10 +3,13 @@ import RSVP from 'rsvp';
 import SailsBaseAdapter from 'voll-ember-data-sails/adapters/sails-base';
 import { module, test } from 'qunit';
 import extend from '../../helpers/extend';
+import { setupTest } from 'ember-qunit';
 
 var bind = run.bind;
 
 module('SailsBaseAdapter', function (hooks) {
+  setupTest(hooks);
+
   hooks.beforeEach(function () {
     this.subject = function (obj) {
       return run(SailsBaseAdapter, 'create', obj || {});

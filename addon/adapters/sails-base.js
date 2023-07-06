@@ -1,13 +1,14 @@
-import { InvalidError } from "@ember-data/adapter/error";
-import RESTAdapter from "@ember-data/adapter/rest";
-import { debug, warn } from "@ember/debug";
-import { set } from "@ember/object";
-import Evented from "@ember/object/evented";
-import { bind, schedule } from "@ember/runloop";
-import { camelize } from "@ember/string";
-import { pluralize } from "ember-inflector";
-import RSVP from "rsvp";
-import { getOwner } from "@ember/application";
+import { InvalidError } from '@ember-data/adapter/error';
+import RESTAdapter from '@ember-data/adapter/rest';
+import { debug, warn } from '@ember/debug';
+import { set } from '@ember/object';
+import Evented from '@ember/object/evented';
+import { bind, schedule } from '@ember/runloop';
+import { camelize } from '@ember/string';
+import { pluralize } from 'ember-inflector';
+import RSVP from 'rsvp';
+import { getOwner } from '@ember/owner';
+import { cached } from '@glimmer/tracking';
 
 /**
  * Base adapter for SailsJS adapters
@@ -19,16 +20,19 @@ import { getOwner } from "@ember/application";
  * @constructor
  */
 export default class SailsBase extends RESTAdapter.extend(Evented) {
-  get env() {
-    const owner = getOwner(this);
+  get config() {
+    return getOwner(this).resolveRegistration('config:environment');
+  }
 
-    return owner.resolveRegistration("config:environment");
+  @cached
+  get SAILS_LOG_LEVEL() {
+    return this.config.APP.SAILS_LOG_LEVEL;
   }
 
   /**
    * @inheritDoc
    */
-  defaultSerializer = "sails";
+  defaultSerializer = 'sails';
 
   /**
    * Whether to use CSRF
@@ -44,7 +48,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
    * @property csrfTokenPath
    * @type String
    */
-  csrfTokenPath = "/csrfToken";
+  csrfTokenPath = '/csrfToken';
 
   /**
    * The csrfToken
@@ -81,28 +85,24 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
   constructor() {
     super();
 
-    const {
-      APP: { SAILS_LOG_LEVEL },
-    } = this.env;
-
-    const levelMap = { notice: "log" };
-    const minLevel = SAILS_LOG_LEVEL;
-    const LEVELS = "debug info notice warn error".split(" ");
+    const levelMap = { notice: 'log' };
+    const minLevel = this.SAILS_LOG_LEVEL;
+    const LEVELS = 'debug info notice warn error'.split(' ');
 
     let shouldLog = false;
     LEVELS.forEach(function (level) {
       if (level === minLevel) shouldLog = true;
 
       if (shouldLog) {
-        this[level] = console.log.bind(levelMap[level] || level, "[ed-sails]");
+        this[level] = console.log.bind(levelMap[level] || level, '[ed-sails]');
       } else {
         this[level] = () => {};
       }
     });
 
-    console.log("this", this);
+    console.log('this', this);
 
-    set(this, "csrfToken", null);
+    set(this, 'csrfToken', null);
   }
 
   /**
@@ -118,7 +118,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
     if (!options) {
       options = {};
     }
-    if (!options.data && method !== "GET") {
+    if (!options.data && method !== 'GET') {
       // so that we can add our CSRF token
       options.data = {};
     }
@@ -128,36 +128,36 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
         .then(
           bind(this, function (response) {
             debug(`${out.protocol} ${method} request on ${url}: SUCCESS`);
-            debug("  → request:", options.data);
-            debug("  ← response:", response);
+            debug('  → request:', options.data);
+            debug('  ← response:', response);
             if (this.isErrorObject(response)) {
               if (response.errors) {
                 return RSVP.reject(
-                  new InvalidError(this.formatError(response))
+                  new InvalidError(this.formatError(response)),
                 );
               }
               return RSVP.reject(response);
             }
             return response;
-          })
+          }),
         )
         .catch(
           bind(this, function (error) {
             warn(`${out.protocol} ${method} request on ${url}: ERROR`, false, {
-              id: "ember-data-sails.failed-request",
+              id: 'ember-data-sails.failed-request',
             });
-            debug("  → request:", options.data);
-            debug("  ← error:", error);
+            debug('  → request:', options.data);
+            debug('  ← error:', error);
             return RSVP.reject(error);
-          })
+          }),
         );
     });
-    if (method !== "GET") {
+    if (method !== 'GET') {
       return this.fetchCSRFToken().then(
         bind(this, function () {
           this.checkCSRF(options.data);
           return processRequest();
-        })
+        }),
       );
     } else {
       return processRequest();
@@ -180,7 +180,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
     }
 
     if (data.errors) {
-      this.error("error returned from Sails", data);
+      this.error('error returned from Sails', data);
       return new InvalidError(this.formatError(data));
     } else if (data) {
       return new Error(data);
@@ -201,29 +201,29 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
     let promise;
     if (this.useCSRF && (force || !this.csrfToken)) {
       if (!(promise = this._csrfTokenLoadingPromise)) {
-        set(this, "csrfToken", null);
-        debug("fetching CSRF token...");
+        set(this, 'csrfToken', null);
+        debug('fetching CSRF token...');
         promise = this._fetchCSRFToken()
           // handle success response
           .then((token) => {
             if (!token) {
-              this.error("Got an empty CSRF token from the server.");
-              return RSVP.reject("Got an empty CSRF token from the server!");
+              this.error('Got an empty CSRF token from the server.');
+              return RSVP.reject('Got an empty CSRF token from the server!');
             }
-            debug("got a new CSRF token:", token);
-            set(this, "csrfToken", token);
-            schedule("actions", this, "trigger", "didLoadCSRF", token);
+            debug('got a new CSRF token:', token);
+            set(this, 'csrfToken', token);
+            schedule('actions', this, 'trigger', 'didLoadCSRF', token);
             return token;
           })
           // handle errors
           .catch((error) => {
-            this.error("error trying to get new CSRF token:", error);
-            schedule("actions", this, "trigger", "didLoadCSRF", null, error);
+            this.error('error trying to get new CSRF token:', error);
+            schedule('actions', this, 'trigger', 'didLoadCSRF', null, error);
             return error;
           })
           // reset the loading promise
-          .finally(bind(this, "set", "_csrfTokenLoadingPromise", null));
-        set(this, "_csrfTokenLoadingPromise", promise);
+          .finally(bind(this, 'set', '_csrfTokenLoadingPromise', null));
+        set(this, '_csrfTokenLoadingPromise', promise);
       }
       // return the loading promise
       return promise;
@@ -242,14 +242,13 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
   formatError(error) {
     return Object.keys(error.invalidAttributes).reduce(function (
       memo,
-      property
+      property,
     ) {
       memo[property] = error.invalidAttributes[property].map(function (err) {
         return err.message;
       });
       return memo;
-    },
-    {});
+    }, {});
   }
 
   /**
@@ -285,9 +284,9 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
     if (!this.useCSRF) {
       return data;
     }
-    debug("adding CSRF token");
+    debug('adding CSRF token');
     if (!this.csrfToken) {
-      throw new Error("CSRF Token not fetched yet.");
+      throw new Error('CSRF Token not fetched yet.');
     }
     data._csrf = this.csrfToken;
     return data;
