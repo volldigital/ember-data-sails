@@ -1,13 +1,13 @@
+import { InvalidError } from "@ember-data/adapter/error";
+import RESTAdapter from "@ember-data/adapter/rest";
+import { debug, warn } from "@ember/debug";
+import { set } from "@ember/object";
 import Evented from "@ember/object/evented";
-import RSVP from "rsvp";
 import { bind, schedule } from "@ember/runloop";
 import { camelize } from "@ember/string";
-import { set, get } from "@ember/object";
-import DS from "ember-data";
-import WithLoggerMixin from "../mixins/with-logger";
 import { pluralize } from "ember-inflector";
-import { bool } from "@ember/object/computed";
-import { debug, warn } from "@ember/debug";
+import RSVP from "rsvp";
+import logger from "../utils/logger";
 
 /**
  * Base adapter for SailsJS adapters
@@ -16,14 +16,13 @@ import { debug, warn } from "@ember/debug";
  * @class SailsBaseAdapter
  * @extends DS.RESTAdapter
  * @uses Ember.Evented
- * @uses WithLoggerMixin
  * @constructor
  */
-export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
+export default class SailsBase extends RESTAdapter.extend(Evented) {
   /**
    * @inheritDoc
    */
-  defaultSerializer: "sails",
+  defaultSerializer = "sails";
 
   /**
    * Whether to use CSRF
@@ -31,7 +30,7 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
    * @property useCSRF
    * @type Boolean
    */
-  useCSRF: false,
+  useCSRF = false;
 
   /**
    * Path where to GET the CSRF
@@ -39,7 +38,7 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
    * @property csrfTokenPath
    * @type String
    */
-  csrfTokenPath: "/csrfToken",
+  csrfTokenPath = "/csrfToken";
 
   /**
    * The csrfToken
@@ -47,7 +46,7 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
    * @property csrfToken
    * @type String
    */
-  csrfToken: null,
+  csrfToken = null;
 
   /**
    * Are we loading CSRF token?
@@ -55,7 +54,9 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
    * @property isLoadingCSRF
    * @type Boolean
    */
-  isLoadingCSRF: bool("_csrfTokenLoadingPromise"),
+  get isLoadingCSRF() {
+    return Boolean(this._csrfTokenLoadingPromise);
+  }
 
   /**
    * The promise responsible of the current CSRF token fetch
@@ -64,17 +65,17 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
    * @type Promise
    * @private
    */
-  _csrfTokenLoadingPromise: null,
+  _csrfTokenLoadingPromise = null;
 
   /**
-   * @since 0.0.4
-   * @method init
+   * @since 1.0.0
+   * @method constructor
    * @inheritDoc
    */
-  init: function () {
-    this._super();
+  constructor() {
+    super();
     set(this, "csrfToken", null);
-  },
+  }
 
   /**
    * Send a message using `_request` of extending class
@@ -83,7 +84,7 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
    * @method ajax
    * @inheritDoc
    */
-  ajax: function (url, method, options) {
+  ajax(url, method, options) {
     const out = {};
     method = method.toUpperCase();
     if (!options) {
@@ -93,6 +94,7 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
       // so that we can add our CSRF token
       options.data = {};
     }
+
     const processRequest = bind(this, function () {
       return this._request(out, url, method, options)
         .then(
@@ -103,7 +105,7 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
             if (this.isErrorObject(response)) {
               if (response.errors) {
                 return RSVP.reject(
-                  new DS.InvalidError(this.formatError(response))
+                  new InvalidError(this.formatError(response))
                 );
               }
               return RSVP.reject(response);
@@ -132,15 +134,15 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
     } else {
       return processRequest();
     }
-  },
+  }
 
   /**
    * @since 0.0.1
    * @method ajaxError
    * @inheritDoc
    */
-  ajaxError: function (jqXHR) {
-    const error = this._super(jqXHR);
+  ajaxError(jqXHR) {
+    const error = super.ajaxError(jqXHR);
     let data;
 
     try {
@@ -150,14 +152,14 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
     }
 
     if (data.errors) {
-      this.error("error returned from Sails", data);
-      return new DS.InvalidError(this.formatError(data));
+      logger.error("error returned from Sails", data);
+      return new InvalidError(this.formatError(data));
     } else if (data) {
       return new Error(data);
     } else {
       return error;
     }
-  },
+  }
 
   /**
    * Fetches the CSRF token if needed
@@ -167,39 +169,39 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
    * @param {Boolean} [force] If `true`, the token will be fetched even if it has already been fetched
    * @return {RSVP.Promise}
    */
-  fetchCSRFToken: function (force) {
+  fetchCSRFToken(force) {
     let promise;
-    if (get(this, "useCSRF") && (force || !get(this, "csrfToken"))) {
-      if (!(promise = get(this, "_csrfTokenLoadingPromise"))) {
-        this.set("csrfToken", null);
+    if (this.useCSRF && (force || !this.csrfToken)) {
+      if (!(promise = this._csrfTokenLoadingPromise)) {
+        set(this, "csrfToken", null);
         debug("fetching CSRF token...");
         promise = this._fetchCSRFToken()
           // handle success response
           .then((token) => {
             if (!token) {
-              this.error("Got an empty CSRF token from the server.");
+              logger.error("Got an empty CSRF token from the server.");
               return RSVP.reject("Got an empty CSRF token from the server!");
             }
             debug("got a new CSRF token:", token);
-            this.set("csrfToken", token);
+            set(this, "csrfToken", token);
             schedule("actions", this, "trigger", "didLoadCSRF", token);
             return token;
           })
           // handle errors
           .catch((error) => {
-            this.error("error trying to get new CSRF token:", error);
+            logger.error("error trying to get new CSRF token:", error);
             schedule("actions", this, "trigger", "didLoadCSRF", null, error);
             return error;
           })
           // reset the loading promise
           .finally(bind(this, "set", "_csrfTokenLoadingPromise", null));
-        this.set("_csrfTokenLoadingPromise", promise);
+        set(this, "_csrfTokenLoadingPromise", promise);
       }
       // return the loading promise
       return promise;
     }
     return RSVP.resolve(null);
-  },
+  }
 
   /**
    * Format an error coming from Sails
@@ -209,7 +211,7 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
    * @param {Object} error The error to format
    * @return {Object}
    */
-  formatError: function (error) {
+  formatError(error) {
     return Object.keys(error.invalidAttributes).reduce(function (
       memo,
       property
@@ -220,16 +222,16 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
       return memo;
     },
     {});
-  },
+  }
 
   /**
    * @since 0.0.1
    * @method pathForType
    * @inheritDoc
    */
-  pathForType: function (type) {
+  pathForType(type) {
     return pluralize(camelize(type));
-  },
+  }
 
   /**
    * Is the given result a Sails error object?
@@ -239,9 +241,9 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
    * @param {Object} data The object to test
    * @return {Boolean} Returns `true` if it's an error object, else `false`
    */
-  isErrorObject: function (data) {
+  isErrorObject(data) {
     return !!(data && data.error && data.model && data.summary && data.status);
-  },
+  }
 
   /**
    * Check if we have a CSRF and include it in the given data to be sent
@@ -251,7 +253,7 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
    * @param {Object} [data] The data on which to attach the CSRF token
    * @return {Object} data The given data
    */
-  checkCSRF: function (data) {
+  checkCSRF(data) {
     if (!this.useCSRF) {
       return data;
     }
@@ -261,5 +263,5 @@ export default DS.RESTAdapter.extend(Evented, WithLoggerMixin, {
     }
     data._csrf = this.csrfToken;
     return data;
-  },
-});
+  }
+}
