@@ -1,7 +1,5 @@
-/* global clearTimeout */
-import { fmt } from "@ember/string";
-
-import { bind } from "@ember/runloop";
+import { fmt } from '@ember/string';
+import { bind } from '@ember/runloop';
 
 var socket, io;
 
@@ -21,10 +19,10 @@ function requestMethod(method) {
 socket = {
   requestQueue: [],
 
-  get: requestMethod("get"),
-  post: requestMethod("post"),
-  put: requestMethod("put"),
-  delete: requestMethod("delete"),
+  get: requestMethod('get'),
+  post: requestMethod('post'),
+  put: requestMethod('put'),
+  delete: requestMethod('delete'),
 
   // mocked properties and methods
   _raw: {
@@ -62,14 +60,14 @@ socket = {
           this.reconnecting = false;
           this.connecting = false;
           if (fail) {
-            io.mockTrigger("connect_failed");
+            io.mockTrigger('connect_failed');
           } else {
             this.connected = this.open = true;
             io.mockProcessQueue();
-            io.mockTrigger("connect");
+            io.mockTrigger('connect');
           }
         }),
-        delay
+        delay,
       );
     },
 
@@ -100,10 +98,10 @@ socket = {
           this.disconnecting = false;
           if (!fail) {
             this.connected = this.open = false;
-            io.mockTrigger("disconnect");
+            io.mockTrigger('disconnect');
           }
         }),
-        delay
+        delay,
       );
     },
 
@@ -156,16 +154,16 @@ io = {
       res = io.mockPopResponse(item.method, item.url);
       if (!res) {
         throw new ReferenceError(
-          fmt("unable to find a mock for %@ %@", item.method, item.url)
+          fmt('unable to find a mock for %@ %@', item.method, item.url),
         );
       }
       res.onStart(res);
       setTimeout(function () {
-        setTimeout(bind(io, "mockProcessQueue"), 1);
+        setTimeout(bind(io, 'mockProcessQueue'), 1);
         if (res.error) {
           item.cb(
             res.response,
-            res.error === true ? { statusCode: 404 } : res.error
+            res.error === true ? { statusCode: 404 } : res.error,
           );
         } else {
           item.cb(res.response, { statusCode: 200 });

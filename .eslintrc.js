@@ -8,12 +8,6 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
     requireConfigFile: false,
-    babelOptions: {
-      plugins: [
-        ['@babel/plugin-proposal-decorators', { decoratorsBeforeExport: true }],
-      ],
-    },
-    requireConfigFile: false,
     babelOptions: { configFile: path.join(__dirname, 'babel.config.json') },
   },
   plugins: ['ember'],
@@ -53,6 +47,10 @@ module.exports = {
       // test files
       files: ['tests/**/*-test.{js,ts}'],
       extends: ['plugin:qunit/recommended'],
+
+      rules: {
+        'qunit/require-expect': 0,
+      },
     },
   ],
 };

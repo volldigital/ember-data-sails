@@ -20,12 +20,9 @@
   },
   "scripts": {
     "build": "ember build",
-    "lint:css": "stylelint \"**/*.css\"",
-    "lint:css:fix": "concurrently \"npm:lint:css -- --fix\"",
-    "lint:hbs": "ember-template-lint .",
     "lint:js": "eslint .",
     "start": "ember serve",
-    "test": "concurrently \"npm:lint\" \"npm:test:*\" --names \"lint,test:\"",
+    "test": "concurrently \"npm:lint:js\" \"npm:test:*\" --names \"lint:js,test:\"",
     "test:all": "ember try:each"
   },
   "dependencies": {
@@ -39,6 +36,7 @@
     "@ember/optional-features": "^2.0.0",
     "@ember/string": "^3.1.1",
     "@ember/test-helpers": "^2.9.4",
+    "@embroider/test-setup": "^3.0.1",
     "@glimmer/component": "^1.1.2",
     "@glimmer/tracking": "^1.1.2",
     "broccoli-asset-rev": "^3.0.0",
@@ -60,6 +58,7 @@
     "eslint": "^8.44.0",
     "eslint-plugin-ember": "^11.9.0",
     "eslint-plugin-n": "^16.0.1",
+    "eslint-plugin-qunit": "^8.0.0",
     "loader.js": "^4.7.0",
     "qunit-dom": "^2.0.0",
     "stylelint": "^15.10.1",
