@@ -1,6 +1,6 @@
-import { Promise as EmberPromise } from "rsvp";
-import SailsSocketAdapter from "voll-ember-data-sails/adapters/sails-socket";
-import SailsRESTAdapter from "voll-ember-data-sails/adapters/sails-rest";
+import { Promise as EmberPromise } from 'rsvp';
+import SailsSocketAdapter from '@volldigital/ember-data-sails/adapters/sails-socket';
+import SailsRESTAdapter from '@volldigital/ember-data-sails/adapters/sails-rest';
 
 export function adapterCall(adapter, returnPromise, method) {
   const args = [].slice.call(arguments, 2);
@@ -8,9 +8,9 @@ export function adapterCall(adapter, returnPromise, method) {
 
   adapter._request = function (out) {
     if (adapter instanceof SailsSocketAdapter) {
-      out.protocol = "socket";
+      out.protocol = 'socket';
     } else if (adapter instanceof SailsRESTAdapter) {
-      out.protocol = "http";
+      out.protocol = 'http';
     }
     return returnPromise;
   };

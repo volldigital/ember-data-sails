@@ -1,22 +1,22 @@
 /* jshint node: true */
-"use strict";
+'use strict';
 
 module.exports = {
-  name: "voll-ember-data-sails",
+  name: '@volldigital/ember-data-sails',
 
   contentFor: function (what, config) {
     var options;
-    if (what === "body") {
+    if (what === 'body') {
       if (config.APP && config.APP.emberDataSails) {
         options = config.APP.emberDataSails;
       } else {
         options = {};
       }
       if (!options.host) {
-        options.host = "";
+        options.host = '';
       }
       if (!options.scriptPath) {
-        options.scriptPath = "/js/dependencies/sails.io.js";
+        options.scriptPath = '/js/dependencies/sails.io.js';
       }
       return (
         '<script type="text/javascript" id="eds-sails-io-script" src="' +

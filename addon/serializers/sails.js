@@ -1,16 +1,16 @@
-import RESTSerializer from "@ember-data/serializer/rest";
-import { debug, warn } from "@ember/debug";
-import { readOnly } from "@ember/object/computed";
-import { typeOf } from "@ember/utils";
-import SailsSocketAdapter from "voll-ember-data-sails/adapters/sails-socket";
-import { pluralize } from "ember-inflector";
-import _ from "lodash";
+import RESTSerializer from '@ember-data/serializer/rest';
+import { debug, warn } from '@ember/debug';
+import { readOnly } from '@ember/object/computed';
+import { typeOf } from '@ember/utils';
+import SailsSocketAdapter from '@volldigital/ember-data-sails/adapters/sails-socket';
+import { pluralize } from 'ember-inflector';
+import _ from 'lodash';
 
 function blueprintsWrapMethod(superMethod, method) {
   return function () {
     return (this.useSailsEmberBlueprints ? superMethod : method).apply(
       this,
-      arguments
+      arguments,
     );
   };
 }
@@ -34,7 +34,7 @@ export default class SailsSerializer extends RESTSerializer {
    * @property useSailsEmberBlueprints
    * @type Boolean
    */
-  @readOnly("config.useSailsEmberBlueprints") useSailsEmberBlueprints;
+  @readOnly('config.useSailsEmberBlueprints') useSailsEmberBlueprints;
 
   /**
    * @since 0.0.11
@@ -50,7 +50,7 @@ export default class SailsSerializer extends RESTSerializer {
         let newPayload = {};
         newPayload[pluralize(primaryType.modelName)] = payload;
         return superMethod(...arguments);
-      }
+      },
     );
   }
 
@@ -71,7 +71,7 @@ export default class SailsSerializer extends RESTSerializer {
         let newPayload = {};
         newPayload[pluralize(primaryType.modelName)] = [payload];
         return superMethod(...arguments);
-      }
+      },
     );
   }
 
@@ -89,15 +89,15 @@ export default class SailsSerializer extends RESTSerializer {
         if (Object.keys(data).length > 0) {
           this.error(
             `trying to serialize multiple records in one hash for type ${type.modelName}`,
-            data
+            data,
           );
           throw new Error(
-            "Sails does not accept putting multiple records in one hash"
+            'Sails does not accept putting multiple records in one hash',
           );
         }
         const json = this.serialize(record, options);
         _.merge(data, json);
-      }
+      },
     );
   }
 
@@ -153,16 +153,16 @@ export default class SailsSerializer extends RESTSerializer {
       const data = hash[key];
       const serializer = store.serializerFor(modelName);
       if (data) {
-        if (rel.kind === "belongsTo") {
-          if (typeOf(hash[key]) === "object") {
+        if (rel.kind === 'belongsTo') {
+          if (typeOf(hash[key]) === 'object') {
             debug(`found 1 embedded ${modelName} record:`, hash[key]);
             delete hash[key];
             store.push(rel.type, serializer.normalize(rel.type, data, null));
             hash[key] = data.id;
           }
-        } else if (rel.kind === "hasMany") {
+        } else if (rel.kind === 'hasMany') {
           hash[key] = data.map(function (item) {
-            if (typeOf(item) === "object") {
+            if (typeOf(item) === 'object') {
               debug(`found 1 embedded ${modelName} record:`, item);
               store.push(rel.type, serializer.normalize(rel.type, item, null));
               return item.id;
@@ -171,9 +171,9 @@ export default class SailsSerializer extends RESTSerializer {
           });
         } else {
           warn(`unknown relationship kind ${rel.kind}: ${rel}`, false, {
-            id: "ember-data-sails.relationship",
+            id: 'ember-data-sails.relationship',
           });
-          throw new Error("Unknown relationship kind " + rel.kind);
+          throw new Error('Unknown relationship kind ' + rel.kind);
         }
       }
     });

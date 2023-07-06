@@ -1,10 +1,10 @@
-import Application from "@ember/application";
-import { run } from "@ember/runloop";
-import { module, test } from "qunit";
-import { initialize } from "voll-ember-data-sails/initializers/ember-data-sails";
-import destroyApp from "../../helpers/destroy-app";
+import Application from '@ember/application';
+import { run } from '@ember/runloop';
+import { module, test } from 'qunit';
+import { initialize } from '@volldigital/ember-data-sails/initializers/ember-data-sails';
+import destroyApp from '../../helpers/destroy-app';
 
-module("EmberDataSailsInitializer", function (hooks) {
+module('EmberDataSailsInitializer', function (hooks) {
   hooks.beforeEach(function () {
     run(() => {
       this.application = Application.create();
@@ -16,7 +16,7 @@ module("EmberDataSailsInitializer", function (hooks) {
     destroyApp(this.application);
   });
 
-  test("it setups injections of the socket service", function (assert) {
+  test('it setups injections of the socket service', function (assert) {
     initialize(this.application);
     assert.ok(true);
   });

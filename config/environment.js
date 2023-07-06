@@ -4,7 +4,7 @@ module.exports = function (environment, appConfig) {
     level = appConfig.SAILS_LOG_LEVEL;
   }
   return {
-    modulePrefix: 'voll-ember-data-sails',
+    modulePrefix: '@volldigital/ember-data-sails',
     LOG_LEVEL: level,
   };
 };

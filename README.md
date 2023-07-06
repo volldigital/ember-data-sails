@@ -1,4 +1,4 @@
-# voll-ember-data-sails (ember-data-sails fork)
+# @volldigital/ember-data-sails (ember-data-sails fork)
 <br>
 
 ## The goal of this fork is to enable usage with Ember 4.
