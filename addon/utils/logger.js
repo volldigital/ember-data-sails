@@ -1,4 +1,4 @@
-import ENV from "@waldemar-p/ember-data-sails/config/environment";
+import ENV from "@volldigital/ember-data-sails/config/environment";
 
 const {
   APP: { SAILS_LOG_LEVEL },

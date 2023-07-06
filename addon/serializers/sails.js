@@ -1,4 +1,4 @@
-import SailsSocketAdapter from "@waldemar-p/ember-data-sails/adapters/sails-socket";
+import SailsSocketAdapter from "@volldigital/ember-data-sails/adapters/sails-socket";
 import { debug, warn } from "@ember/debug";
 import { computed, get } from "@ember/object";
 import { readOnly } from "@ember/object/computed";

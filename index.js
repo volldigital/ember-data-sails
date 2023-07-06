@@ -2,7 +2,7 @@
 "use strict";
 
 module.exports = {
-  name: "@waldemar-p/ember-data-sails",
+  name: "@volldigital/ember-data-sails",
 
   contentFor: function (what, config) {
     var options;

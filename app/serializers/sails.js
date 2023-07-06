@@ -1,3 +1,3 @@
-import SailsSerializer from "@waldemar-p/ember-data-sails/serializers/sails";
+import SailsSerializer from "@volldigital/ember-data-sails/serializers/sails";
 
 export default SailsSerializer;

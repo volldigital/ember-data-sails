@@ -1,4 +1,4 @@
-import SailsSocketAdapter from "@waldemar-p/ember-data-sails/adapters/sails-socket";
+import SailsSocketAdapter from "@volldigital/ember-data-sails/adapters/sails-socket";
 
 export default SailsSocketAdapter.extend({
   defaultSerializer: "-rest",
