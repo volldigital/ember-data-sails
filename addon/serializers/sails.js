@@ -1,16 +1,14 @@
-import SailsSocketAdapter from "@volldigital/ember-data-sails/adapters/sails-socket";
+import RESTSerializer from "@ember-data/serializer/rest";
 import { debug, warn } from "@ember/debug";
-import { computed, get } from "@ember/object";
 import { readOnly } from "@ember/object/computed";
 import { typeOf } from "@ember/utils";
-import DS from "ember-data";
+import SailsSocketAdapter from "@volldigital/ember-data-sails/adapters/sails-socket";
 import { pluralize } from "ember-inflector";
 import _ from "lodash";
-import WithLogger from "../mixins/with-logger";
 
-function blueprintsWrapMethod(method) {
+function blueprintsWrapMethod(superMethod, method) {
   return function () {
-    return (get(this, "useSailsEmberBlueprints") ? this._super : method).apply(
+    return (this.useSailsEmberBlueprints ? superMethod : method).apply(
       this,
       arguments
     );
@@ -19,18 +17,16 @@ function blueprintsWrapMethod(method) {
 
 /**
  * @class SailsSerializer
- * @extends DS.RESTSerializer
+ * @extends RESTSerializer
  */
-const SailsSerializer = DS.RESTSerializer.extend(WithLogger, {
+export default class SailsSerializer extends RESTSerializer {
   /**
    * The config of the addon will be set here by the initializer
    * @since 0.0.17
    * @property config
    * @type Object
    */
-  config: computed(function () {
-    return {};
-  }),
+  config = {};
 
   /**
    * Whether to use `sails-generate-ember-blueprints` or not
@@ -38,84 +34,77 @@ const SailsSerializer = DS.RESTSerializer.extend(WithLogger, {
    * @property useSailsEmberBlueprints
    * @type Boolean
    */
-  useSailsEmberBlueprints: readOnly("config.useSailsEmberBlueprints"),
+  @readOnly("config.useSailsEmberBlueprints") useSailsEmberBlueprints;
 
   /**
    * @since 0.0.11
    * @method extractArray
    * @inheritDoc
    */
-  normalizeArrayResponse: blueprintsWrapMethod(function (
-    store,
-    primaryType,
-    payload
-  ) {
-    let newPayload = {};
-    newPayload[pluralize(primaryType.modelName)] = payload;
-    return this._super(...arguments);
-  }),
+  normalizeArrayResponse = blueprintsWrapMethod(
+    super.normalizeArrayResponse,
+    function (store, primaryType, payload) {
+      let newPayload = {};
+      newPayload[pluralize(primaryType.modelName)] = payload;
+      return super.normalizeArrayResponse(...arguments);
+    }
+  );
 
   /**
    * @since 0.0.11
    * @method extractSingle
    * @inheritDoc
    */
-  normalizeSingleResponse: blueprintsWrapMethod(function (
-    store,
-    primaryType,
-    payload
-  ) {
-    if (payload === null) {
-      return this._super.apply(this, arguments);
+  normalizeSingleResponse = blueprintsWrapMethod(
+    super.normalizeSingleResponse,
+    function (store, primaryType, payload) {
+      if (payload === null) {
+        return super.normalizeSingleResponse.apply(this, arguments);
+      }
+      let newPayload = {};
+      newPayload[pluralize(primaryType.modelName)] = [payload];
+      return super.normalizeSingleResponse(...arguments);
     }
-    let newPayload = {};
-    newPayload[pluralize(primaryType.modelName)] = [payload];
-    return this._super(...arguments);
-  }),
+  );
 
   /**
    * @since 0.0.11
    * @method serializeIntoHash
    * @inheritDoc
    */
-  serializeIntoHash: blueprintsWrapMethod(function (
-    data,
-    type,
-    record,
-    options
-  ) {
-    if (Object.keys(data).length > 0) {
-      this.error(
-        `trying to serialize multiple records in one hash for type ${type.modelName}`,
-        data
-      );
-      throw new Error(
-        "Sails does not accept putting multiple records in one hash"
-      );
+  serializeIntoHash = blueprintsWrapMethod(
+    super.serializeIntoHash,
+    function (data, type, record, options) {
+      if (Object.keys(data).length > 0) {
+        this.error(
+          `trying to serialize multiple records in one hash for type ${type.modelName}`,
+          data
+        );
+        throw new Error(
+          "Sails does not accept putting multiple records in one hash"
+        );
+      }
+      const json = this.serialize(record, options);
+      _.merge(data, json);
     }
-    const json = this.serialize(record, options);
-    _.merge(data, json);
-  }),
+  );
 
   /**
    * @since 0.0.11
    * @method normalize
    * @inheritDoc
    */
-  normalize: blueprintsWrapMethod(function (type) {
-    const normalized = this._super(...arguments);
+  normalize = blueprintsWrapMethod(super.normalize, function (type) {
+    const normalized = super.normalize(...arguments);
     return this._extractEmbeddedRecords(this, this.store, type, normalized);
-  }),
+  });
 
   /**
    * @since 0.0.15
    * @method extract
    * @inheritDoc
    */
-  normalizeResponse: function (
-    store,
-    primaryModelClass /*, payload, id, requestType*/
-  ) {
+  normalizeResponse(store, primaryModelClass /*, payload, id, requestType*/) {
     // this is the only place we have access to the store, so that we can get the adapter and check
     // if it is an instance of sails socket adapter, and so register for events if necessary on that
     // model. We keep a cache here to avoid too many calls
@@ -129,20 +118,20 @@ const SailsSerializer = DS.RESTSerializer.extend(WithLogger, {
         adapter instanceof SailsSocketAdapter;
       adapter._listenToSocket(modelName);
     }
-    return this._super.apply(this, arguments);
-  },
+    return super.normalizeResponse.apply(this, arguments);
+  }
 
   /**
    * Extract the embedded records and create them
    *
    * @since 0.0.11
    * @method _extractEmbeddedRecords
-   * @param {subclass of DS.Model} type
+   * @param {subclass of Model} type
    * @param {Object} hash
    * @returns {Object}
    * @private
    */
-  _extractEmbeddedRecords: function (serializer, store, type, hash) {
+  _extractEmbeddedRecords(serializer, store, type, hash) {
     type.eachRelationship((key, rel) => {
       const modelName = rel.type.modelName;
       const data = hash[key];
@@ -173,7 +162,5 @@ const SailsSerializer = DS.RESTSerializer.extend(WithLogger, {
       }
     });
     return hash;
-  },
-});
-
-export default SailsSerializer;
+  }
+}

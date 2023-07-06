@@ -14,7 +14,7 @@ import logger from "../utils/logger";
  *
  * @since 0.0.1
  * @class SailsBaseAdapter
- * @extends DS.RESTAdapter
+ * @extends RESTAdapter
  * @uses Ember.Evented
  * @constructor
  */

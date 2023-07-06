@@ -47,11 +47,11 @@ Adapters and tools for Ember to work well with Sails. Provides `SailsSocketServi
     ```
 
 
-* `DS.SailsSocketAdapter`: use this adapter when you want to use sockets for your model(s)
-* `DS.SailsRESTAdapter`: use this adapter when you want to use sockets for your model(s)
-* `DS.SailsSerializer`: used by default when you use a Sails adapter, you shouldn't need to access it but it's there in case
-* `DS.Store.pushPayload([type], payload, [subscribe=false])`: as the original one from Ember Data, except it accepts an additional parameter which, when set to `true`, will tell the socket adapter to subscribe to the pushed records (see below)
-* `DS.Store.subscribe(type, ids)`: tells the sails socket adapter to subscribe to those models (see below)
+* `SailsSocketAdapter`: use this adapter when you want to use sockets for your model(s)
+* `SailsRESTAdapter`: use this adapter when you want to use sockets for your model(s)
+* `SailsSerializer`: used by default when you use a Sails adapter, you shouldn't need to access it but it's there in case
+* `Store.pushPayload([type], payload, [subscribe=false])`: as the original one from Ember Data, except it accepts an additional parameter which, when set to `true`, will tell the socket adapter to subscribe to the pushed records (see below)
+* `Store.subscribe(type, ids)`: tells the sails socket adapter to subscribe to those models (see below)
 
 
 ## Installation

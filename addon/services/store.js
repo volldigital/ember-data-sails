@@ -7,7 +7,7 @@ export default class NewStore extends Store {
    * @since 0.0.11
    * @inheritDoc
    * @method pushPayload
-   * @param {String|subclass of DS.Model} [type]
+   * @param {String|subclass of Model} [type]
    * @param {Object} payload
    * @param {Boolean} [subscribe] Whether to subscribe to pushed models or not (Sails socket)
    */
@@ -51,7 +51,7 @@ export default class NewStore extends Store {
    *
    * @since 0.0.11
    * @method subscribe
-   * @param {String|subclass of DS.Model} type
+   * @param {String|subclass of Model} type
    * @param {Array<String|Number>|String|Number} ids
    */
   subscribe(type, ids) {

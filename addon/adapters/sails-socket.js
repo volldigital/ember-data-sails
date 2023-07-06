@@ -83,7 +83,7 @@ export default class App extends SailsBaseAdapter {
    *
    * @since 0.0.11
    * @method shouldSubscribe
-   * @param {subclass of DS.Model} type The type of the record
+   * @param {subclass of Model} type The type of the record
    * @param {Object} recordJson The json of the record (DO NOT ALTER IT!)
    * @returns {Boolean} If `false` then the record isn't subscribed for, else it is
    */
@@ -112,8 +112,8 @@ export default class App extends SailsBaseAdapter {
    *
    * @since 0.0.1
    * @method _handleSocketRecordCreated
-   * @param {DS.Store} store The store to be used
-   * @param {subclass of DS.Model} type The type to push
+   * @param {Store} store The store to be used
+   * @param {subclass of Model} type The type to push
    * @param {Object} message The message received
    * @private
    */
@@ -132,8 +132,8 @@ export default class App extends SailsBaseAdapter {
    *
    * @since 0.0.1
    * @method _handleSocketRecordUpdated
-   * @param {DS.Store} store The store to be used
-   * @param {subclass of DS.Model} type The type to push
+   * @param {Store} store The store to be used
+   * @param {subclass of Model} type The type to push
    * @param {Object} message The message received
    * @private
    */
@@ -146,8 +146,8 @@ export default class App extends SailsBaseAdapter {
    *
    * @since 0.0.1
    * @method _handleSocketRecordDeleted
-   * @param {DS.Store} store The store to be used
-   * @param {subclass of DS.Model} type The type to push
+   * @param {Store} store The store to be used
+   * @param {subclass of Model} type The type to push
    * @param {Object} message The message received
    * @private
    */
@@ -193,7 +193,7 @@ export default class App extends SailsBaseAdapter {
    *
    * @since 0.0.11
    * @method _scheduleSubscribe
-   * @param {subclass of DS.Model} type
+   * @param {subclass of Model} type
    * @param {String|Number} id
    * @private
    */
