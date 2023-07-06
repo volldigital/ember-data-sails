@@ -1,3 +1,1 @@
-import SailsRESTAdapter from "@volldigital/ember-data-sails/adapters/sails-rest";
-
-export default SailsRESTAdapter;
+export { default } from "voll-ember-data-sails/adapters/sails-rest";

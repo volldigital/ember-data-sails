@@ -7,7 +7,7 @@ import { bind, schedule } from "@ember/runloop";
 import { camelize } from "@ember/string";
 import { pluralize } from "ember-inflector";
 import RSVP from "rsvp";
-import logger from "../utils/logger";
+import { getOwner } from "@ember/application";
 
 /**
  * Base adapter for SailsJS adapters
@@ -19,6 +19,12 @@ import logger from "../utils/logger";
  * @constructor
  */
 export default class SailsBase extends RESTAdapter.extend(Evented) {
+  get env() {
+    const owner = getOwner(this);
+
+    return owner.resolveRegistration("config:environment");
+  }
+
   /**
    * @inheritDoc
    */
@@ -74,6 +80,28 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
    */
   constructor() {
     super();
+
+    const {
+      APP: { SAILS_LOG_LEVEL },
+    } = this.env;
+
+    const levelMap = { notice: "log" };
+    const minLevel = SAILS_LOG_LEVEL;
+    const LEVELS = "debug info notice warn error".split(" ");
+
+    let shouldLog = false;
+    LEVELS.forEach(function (level) {
+      if (level === minLevel) shouldLog = true;
+
+      if (shouldLog) {
+        this[level] = console.log.bind(levelMap[level] || level, "[ed-sails]");
+      } else {
+        this[level] = () => {};
+      }
+    });
+
+    console.log("this", this);
+
     set(this, "csrfToken", null);
   }
 
@@ -152,7 +180,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
     }
 
     if (data.errors) {
-      logger.error("error returned from Sails", data);
+      this.error("error returned from Sails", data);
       return new InvalidError(this.formatError(data));
     } else if (data) {
       return new Error(data);
@@ -179,7 +207,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
           // handle success response
           .then((token) => {
             if (!token) {
-              logger.error("Got an empty CSRF token from the server.");
+              this.error("Got an empty CSRF token from the server.");
               return RSVP.reject("Got an empty CSRF token from the server!");
             }
             debug("got a new CSRF token:", token);
@@ -189,7 +217,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
           })
           // handle errors
           .catch((error) => {
-            logger.error("error trying to get new CSRF token:", error);
+            this.error("error trying to get new CSRF token:", error);
             schedule("actions", this, "trigger", "didLoadCSRF", null, error);
             return error;
           })

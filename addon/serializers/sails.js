@@ -2,7 +2,7 @@ import RESTSerializer from "@ember-data/serializer/rest";
 import { debug, warn } from "@ember/debug";
 import { readOnly } from "@ember/object/computed";
 import { typeOf } from "@ember/utils";
-import SailsSocketAdapter from "@volldigital/ember-data-sails/adapters/sails-socket";
+import SailsSocketAdapter from "voll-ember-data-sails/adapters/sails-socket";
 import { pluralize } from "ember-inflector";
 import _ from "lodash";
 

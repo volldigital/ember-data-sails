@@ -1,3 +1,1 @@
-import SailsSocketAdapter from "@volldigital/ember-data-sails/adapters/sails-socket";
-
-export default SailsSocketAdapter;
+export { default } from "voll-ember-data-sails/adapters/sails-socket";
