@@ -1,3 +1,6 @@
+"use strict";
+const path = require("path");
+
 module.exports = {
   root: true,
   parser: "@babel/eslint-parser",
@@ -8,6 +11,7 @@ module.exports = {
       legacyDecorators: true,
     },
     requireConfigFile: false,
+    babelOptions: { configFile: path.join(__dirname, "babel.config.json") },
   },
   plugins: ["ember"],
   extends: ["eslint:recommended", "plugin:ember/recommended"],
