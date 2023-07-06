@@ -1,4 +1,4 @@
-# ember-data-sails (fork)
+# voll-ember-data-sails (ember-data-sails fork)
 <br>
 
 ## The goal of this fork is to enable usage with Ember 4.
@@ -52,6 +52,12 @@ Adapters and tools for Ember to work well with Sails. Provides `SailsSocketServi
 * `SailsSerializer`: used by default when you use a Sails adapter, you shouldn't need to access it but it's there in case
 * `Store.pushPayload([type], payload, [subscribe=false])`: as the original one from Ember Data, except it accepts an additional parameter which, when set to `true`, will tell the socket adapter to subscribe to the pushed records (see below)
 * `Store.subscribe(type, ids)`: tells the sails socket adapter to subscribe to those models (see below)
+
+## Compatibility
+
+* Ember.js v4.4 or above
+* Ember CLI v4.4 or above
+* Node.js v14 or above
 
 
 ## Installation
