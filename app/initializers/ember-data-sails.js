@@ -1,1 +1,1 @@
-export { default } from '@volldigital/ember-data-sails/initializers/ember-data-sails';
+export { default } from '@voll/ember-data-sails/initializers/ember-data-sails';

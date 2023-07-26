@@ -1,16 +1,16 @@
 {
-  "name": "@volldigital/ember-data-sails",
+  "name": "@voll/ember-data-sails",
   "version": "1.0.0",
   "keywords": [
     "ember-addon"
   ],
-  "homepage": "https://github.com/volldigital/ember-data-sails#readme",
+  "homepage": "https://github.com/voll/ember-data-sails#readme",
   "bugs": {
-    "url": "https://github.com/volldigital/ember-data-sails/issues"
+    "url": "https://github.com/voll/ember-data-sails/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/volldigital/ember-data-sails.git"
+    "url": "git+https://github.com/voll/ember-data-sails.git"
   },
   "license": "MIT",
   "author": "Cody McCulloch",
@@ -81,5 +81,6 @@
   },
   "overrides": {
     "ember-template-lint": "$ember-template-lint"
-  }
+  },
+  "description": "<br>"
 }

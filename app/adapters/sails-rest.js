@@ -1,1 +1,1 @@
-export { default } from '@volldigital/ember-data-sails/adapters/sails-rest';
+export { default } from '@voll/ember-data-sails/adapters/sails-rest';

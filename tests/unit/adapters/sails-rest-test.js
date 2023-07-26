@@ -1,5 +1,5 @@
 import { run } from '@ember/runloop';
-import SailsRestAdapter from '@volldigital/ember-data-sails/adapters/sails-rest';
+import SailsRestAdapter from '@voll/ember-data-sails/adapters/sails-rest';
 import { module, test } from 'qunit';
 import { setupTest } from 'ember-qunit';
 
