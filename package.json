@@ -4,13 +4,13 @@
   "keywords": [
     "ember-addon"
   ],
-  "homepage": "https://github.com/voll/ember-data-sails#readme",
+  "homepage": "https://github.com/volldigital/ember-data-sails#readme",
   "bugs": {
-    "url": "https://github.com/voll/ember-data-sails/issues"
+    "url": "https://github.com/volldigital/ember-data-sails/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/voll/ember-data-sails.git"
+    "url": "git+https://github.com/volldigital/ember-data-sails.git"
   },
   "license": "MIT",
   "author": "Cody McCulloch",
