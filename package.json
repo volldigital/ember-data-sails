@@ -13,7 +13,7 @@
     "url": "git+https://github.com/volldigital/ember-data-sails.git"
   },
   "license": "MIT",
-  "author": "Cody McCulloch",
+  "author": "VOLL digital <technik@voll.digital>",
   "main": "index.js",
   "directories": {
     "test": "tests"
