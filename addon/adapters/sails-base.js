@@ -25,7 +25,6 @@ import RSVP from 'rsvp';
 export default class SailsBase extends RESTAdapter.extend(Evented) {
   @cached
   get SAILS_LOG_LEVEL() {
-    console.log('SAILS_LOG_LEVEL appConfig', this.appConfig);
     return this.appConfig?.SAILS_LOG_LEVEL || 'error';
   }
 
@@ -105,13 +104,13 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
             if (this.isErrorObject(response)) {
               if (response.errors) {
                 return RSVP.reject(
-                  new InvalidError(this.formatError(response)),
+                  new InvalidError(this.formatError(response))
                 );
               }
               return RSVP.reject(response);
             }
             return response;
-          }),
+          })
         )
         .catch(
           bind(this, function (error) {
@@ -121,7 +120,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
             debug('  → request:', options.data);
             debug('  ← error:', error);
             return RSVP.reject(error);
-          }),
+          })
         );
     });
     if (method !== 'GET') {
@@ -129,7 +128,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
         bind(this, function () {
           this.checkCSRF(options.data);
           return processRequest();
-        }),
+        })
       );
     } else {
       return processRequest();
@@ -214,13 +213,14 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
   formatError(error) {
     return Object.keys(error.invalidAttributes).reduce(function (
       memo,
-      property,
+      property
     ) {
       memo[property] = error.invalidAttributes[property].map(function (err) {
         return err.message;
       });
       return memo;
-    }, {});
+    },
+    {});
   }
 
   /**
@@ -268,8 +268,6 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
     const LEVELS = 'debug info notice warn error'.split(' ');
     const levelMap = { notice: 'log' };
     const minLevel = this.SAILS_LOG_LEVEL;
-
-    console.log('minLevel', minLevel);
 
     let shouldLog = false;
     const isLevelLoggable = LEVELS.some((level) => {
