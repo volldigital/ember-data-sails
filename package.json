@@ -67,9 +67,6 @@
     "stylelint-prettier": "^3.0.0",
     "webpack": "^5.88.1"
   },
-  "peerDependencies": {
-    "ember-source": "^4.0.0"
-  },
   "engines": {
     "node": "16.* || >= 18"
   },
