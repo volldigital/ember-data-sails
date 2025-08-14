@@ -1,14 +1,16 @@
-import { InvalidError } from '@ember-data/adapter/error';
 import RESTAdapter from '@ember-data/adapter/rest';
 import { debug, warn } from '@ember/debug';
-import { set } from '@ember/object';
-import Evented from '@ember/object/evented';
+import { action, set } from '@ember/object';
+import {
+  addListener,
+  hasListeners,
+  removeListener,
+  sendEvent,
+} from '@ember/object/events';
 import { bind, schedule } from '@ember/runloop';
 import { camelize } from '@ember/string';
 import { cached } from '@glimmer/tracking';
-import classic from 'ember-classic-decorator';
 import { pluralize } from 'ember-inflector';
-import RSVP from 'rsvp';
 
 /**
  * Base adapter for SailsJS adapters
@@ -16,13 +18,10 @@ import RSVP from 'rsvp';
  * @since 0.0.1
  * @class SailsBaseAdapter
  * @extends RESTAdapter
- * @uses Ember.Evented
- * @classic
  * @constructor
  */
 
-@classic
-export default class SailsBase extends RESTAdapter.extend(Evented) {
+export default class SailsBase extends RESTAdapter {
   @cached
   get SAILS_LOG_LEVEL() {
     return this.appConfig?.SAILS_LOG_LEVEL || 'error';
@@ -83,6 +82,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
    * @method ajax
    * @inheritDoc
    */
+  @action
   ajax(url, method, options) {
     const out = {};
     method = method.toUpperCase();
@@ -103,14 +103,12 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
             debug('  ← response:', response);
             if (this.isErrorObject(response)) {
               if (response.errors) {
-                return RSVP.reject(
-                  new InvalidError(this.formatError(response))
-                );
+                return Promise.reject(new Error(this.formatError(response)));
               }
-              return RSVP.reject(response);
+              return Promise.reject(response);
             }
             return response;
-          })
+          }),
         )
         .catch(
           bind(this, function (error) {
@@ -119,8 +117,8 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
             });
             debug('  → request:', options.data);
             debug('  ← error:', error);
-            return RSVP.reject(error);
-          })
+            return Promise.reject(error);
+          }),
         );
     });
     if (method !== 'GET') {
@@ -128,7 +126,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
         bind(this, function () {
           this.checkCSRF(options.data);
           return processRequest();
-        })
+        }),
       );
     } else {
       return processRequest();
@@ -140,6 +138,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
    * @method ajaxError
    * @inheritDoc
    */
+  @action
   ajaxError(jqXHR) {
     const error = super.ajaxError(jqXHR);
     let data;
@@ -152,7 +151,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
 
     if (data.errors) {
       this.error('error returned from Sails', data);
-      return new InvalidError(this.formatError(data));
+      return new Error(this.formatError(data));
     } else if (data) {
       return new Error(data);
     } else {
@@ -166,8 +165,9 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
    * @since 0.0.3
    * @method fetchCSRFToken
    * @param {Boolean} [force] If `true`, the token will be fetched even if it has already been fetched
-   * @return {RSVP.Promise}
+   * @return {Promise}
    */
+  @action
   fetchCSRFToken(force) {
     let promise;
     if (this.useCSRF && (force || !this.csrfToken)) {
@@ -179,7 +179,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
           .then((token) => {
             if (!token) {
               this.error('Got an empty CSRF token from the server.');
-              return RSVP.reject('Got an empty CSRF token from the server!');
+              return Promise.reject('Got an empty CSRF token from the server!');
             }
             debug('got a new CSRF token:', token);
             set(this, 'csrfToken', token);
@@ -199,7 +199,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
       // return the loading promise
       return promise;
     }
-    return RSVP.resolve(null);
+    return Promise.resolve(null);
   }
 
   /**
@@ -213,14 +213,13 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
   formatError(error) {
     return Object.keys(error.invalidAttributes).reduce(function (
       memo,
-      property
+      property,
     ) {
       memo[property] = error.invalidAttributes[property].map(function (err) {
         return err.message;
       });
       return memo;
-    },
-    {});
+    }, {});
   }
 
   /**
@@ -252,6 +251,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
    * @param {Object} [data] The data on which to attach the CSRF token
    * @return {Object} data The given data
    */
+  @action
   checkCSRF(data) {
     if (!this.useCSRF) {
       return data;
@@ -264,6 +264,7 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
     return data;
   }
 
+  @action
   log(type) {
     const LEVELS = 'debug info notice warn error'.split(' ');
     const levelMap = { notice: 'log' };
@@ -283,23 +284,57 @@ export default class SailsBase extends RESTAdapter.extend(Evented) {
     }
   }
 
+  @action
   debug() {
     return this.log('debug');
   }
 
+  @action
   info() {
     return this.log('info');
   }
 
+  @action
   notice() {
     return this.log('notice');
   }
 
+  @action
   warn() {
     return this.log('warn');
   }
 
+  @action
   error() {
     return this.log('error');
+  }
+
+  @action
+  trigger(event, ...args) {
+    debug(`triggering event ${event}`);
+    return sendEvent(this, event, args);
+  }
+
+  @action
+  on(name, target, method) {
+    addListener(this, name, target, method);
+    return this;
+  }
+
+  @action
+  one(name, target, method) {
+    addListener(this, name, target, method, true);
+    return this;
+  }
+
+  @action
+  off(name, target, method) {
+    removeListener(this, name, target, method);
+    return this;
+  }
+
+  @action
+  has(name) {
+    return hasListeners(this, name);
   }
 }

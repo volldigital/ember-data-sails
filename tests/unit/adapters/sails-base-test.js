@@ -1,5 +1,4 @@
 import { run } from '@ember/runloop';
-import RSVP from 'rsvp';
 import SailsBaseAdapter from '@voll/ember-data-sails/adapters/sails-base';
 import { module, test } from 'qunit';
 import extend from '../../helpers/extend';
@@ -92,12 +91,12 @@ module('SailsBaseAdapter', function (hooks) {
           method: method,
           options: options,
         };
-        return RSVP[res.error ? 'reject' : 'resolve'](res.error || res.data);
+        return Promise[res.error ? 'reject' : 'resolve'](res.error || res.data);
       },
 
       _fetchCSRFToken: function () {
         calls._fetchCSRFToken = true;
-        return RSVP.resolve(CSRF_VALUE);
+        return Promise.resolve(CSRF_VALUE);
       },
     });
 

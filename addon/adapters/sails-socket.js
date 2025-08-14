@@ -59,7 +59,7 @@ export default class App extends SailsBaseAdapter {
    * @param {String} url
    * @param {String} method
    * @param {Object} options
-   * @returns {Ember.RSVP.Promise}
+   * @returns {Promise}
    * @private
    */
   _request(out, url, method, options) {
@@ -96,7 +96,7 @@ export default class App extends SailsBaseAdapter {
    *
    * @since 0.0.4
    * @method _fetchCSRFToken
-   * @return {Ember.RSVP.Promise} Returns the promise resolving the CSRF token
+   * @return {Promise} Returns the promise resolving the CSRF token
    * @private
    */
   _fetchCSRFToken() {

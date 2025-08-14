@@ -1,4 +1,3 @@
-import { Promise as EmberPromise } from 'rsvp';
 import SailsSocketAdapter from '@voll/ember-data-sails/adapters/sails-socket';
 import SailsRESTAdapter from '@voll/ember-data-sails/adapters/sails-rest';
 
@@ -15,7 +14,7 @@ export function adapterCall(adapter, returnPromise, method) {
     return returnPromise;
   };
 
-  return new EmberPromise(function (resolve, reject) {
+  return new Promise(function (resolve, reject) {
     adapter[method]
       .apply(adapter, args)
       .then(resolve, reject)

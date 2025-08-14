@@ -1,12 +1,15 @@
 /* global io */
 import { debug, warn } from '@ember/debug';
-import { set, setProperties } from '@ember/object';
-import Evented from '@ember/object/evented';
+import { action, set, setProperties } from '@ember/object';
+import {
+  addListener,
+  hasListeners,
+  removeListener,
+  sendEvent,
+} from '@ember/object/events';
 import { bind, later, next } from '@ember/runloop';
 import Service from '@ember/service';
 import { tracked } from '@glimmer/tracking';
-import classic from 'ember-classic-decorator';
-import RSVP from 'rsvp';
 
 /**
  * Shortcut to know if an object is alive or not
@@ -14,7 +17,6 @@ import RSVP from 'rsvp';
  * @since 0.0.4
  * @param {Ember.Object} obj The object to test
  * @returns {Boolean} Returns `true` if the object is still alive, else `false`
- * @classic
  * @private
  */
 function isAlive(obj) {
@@ -26,13 +28,11 @@ function isAlive(obj) {
  *
  * @since 0.0.4
  * @class SailsSocketService
- * @extends Ember.Object
- * @uses Ember.Evented
+ * @extends Service
  * @uses WithLoggerMixin
  * @constructor
  */
-@classic
-export default class SailsSocketService extends Service.extend(Evented) {
+export default class SailsSocketService extends Service {
   /**
    * Holds our sails socket
    * @since 0.0.4
@@ -98,11 +98,11 @@ export default class SailsSocketService extends Service.extend(Evented) {
 
   /**
    * @since 0.0.1
-   * @method init
+   * @method constructor
    * @inheritDoc
    */
-  init() {
-    super.init(...arguments);
+  constructor() {
+    super(...arguments);
 
     this._listeners = {};
     this._sailsSocket = null;
@@ -118,6 +118,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @method destroy
    * @inheritDoc
    */
+  @action
   willDestroy() {
     if (this.isConnected) {
       this._sailsSocket.disconnect();
@@ -134,6 +135,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @param {Boolean} [listen=true] If `true`, it'll listen for these events, else it'll stop listening
    * @return {Boolean} Returns `true` if the some change has been triggered or scheduled, else `false`
    */
+  @action
   listenFor(event, listen) {
     listen = listen == null ? true : !!listen;
     let meta = {};
@@ -157,7 +159,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
         }
         this._sailsSocket._raw[sockMethod + 'EventListener'](
           event,
-          meta.method
+          meta.method,
         );
       } else if (!listen) {
         delete this._listeners[event];
@@ -176,14 +178,16 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @method request
    * @param {String} method The name of the method to call
    * @param {mixed} [arg]* Any argument to give to the method
-   * @returns {Ember.RSVP.Promise}
+   * @returns {Promise}
    */
+  @action
   request(method /*, arg*/) {
     const args = [].slice.call(arguments, 1);
     const incPending = bind(this, 'incrementProperty', 'pendingOperationCount');
     method = method.toLowerCase();
     incPending(1);
-    return new RSVP.Promise((resolve, reject) => {
+    // getting the connected Sails socket for ${method} request on ${args[0]}
+    return new Promise((resolve, reject) => {
       this._connectedSocket((error, socket) => {
         if (isAlive(this) && !error) {
           args.push((data, jwr) => {
@@ -200,7 +204,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
           reject(error ? error : new Error('Sails socket service destroyed'));
         }
       });
-    }, `getting the connected Sails socket for ${method} request on ${args[0]}`);
+    });
   }
 
   /**
@@ -208,9 +212,33 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @method trigger
    * @inheritDoc
    */
-  trigger(event /*, arg*/) {
+  @action
+  trigger(event, ...args) {
     debug(`triggering event ${event}`);
-    return super.trigger.apply(this, arguments);
+    return sendEvent(this, event, args);
+  }
+
+  @action
+  on(name, target, method) {
+    addListener(this, name, target, method);
+    return this;
+  }
+
+  @action
+  one(name, target, method) {
+    addListener(this, name, target, method, true);
+    return this;
+  }
+
+  @action
+  off(name, target, method) {
+    removeListener(this, name, target, method);
+    return this;
+  }
+
+  @action
+  has(name) {
+    return hasListeners(this, name);
   }
 
   /**
@@ -221,6 +249,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @param {Function} callback The method to call with the socket or the error
    * @private
    */
+  @action
   _connectedSocket(callback) {
     if (!isAlive(this)) {
       warn('cannot get socket, service destroyed', false, {
@@ -232,7 +261,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
       next(this, callback, null, this._sailsSocket);
     } else {
       debug(
-        'socket not connected, listening for connect event before giving it'
+        'socket not connected, listening for connect event before giving it',
       );
       if (!this._waitingForSockets) {
         this._waitingForSockets = [];
@@ -249,11 +278,11 @@ export default class SailsSocketService extends Service.extend(Evented) {
           for (let i = 0; i < callbacks.length; i++) {
             callbacks[i].call(this, null, this._sailsSocket);
           }
-        })
+        }),
       );
       if (this.isInitialized) {
         debug(
-          'looks like we are initialized but not connected, reconnecting socket'
+          'looks like we are initialized but not connected, reconnecting socket',
         );
         this._reconnect();
       } else {
@@ -270,6 +299,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @since 0.0.4
    * @method _reconnect
    */
+  @action
   _reconnect() {
     if (
       this._sailsSocket._raw &&
@@ -284,11 +314,11 @@ export default class SailsSocketService extends Service.extend(Evented) {
         if (this._sailsSocket._raw) {
           this._sailsSocket._raw.addEventListener(
             'connect',
-            bind(this, '_handleSocketConnect')
+            bind(this, '_handleSocketConnect'),
           );
           this._sailsSocket._raw.addEventListener(
             'disconnect',
-            bind(this, '_handleSocketDisconnect')
+            bind(this, '_handleSocketDisconnect'),
           );
           if (this._sailsSocket._raw.connected) {
             next(this, '_handleSocketConnect');
@@ -309,6 +339,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @chainable
    * @private
    */
+  @action
   _bindListeners() {
     for (let event in this._listeners) {
       const meta = this._listeners[event];
@@ -329,6 +360,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @chainable
    * @private
    */
+  @action
   _unbindListeners() {
     for (let event in this._listeners) {
       const meta = this._listeners[event];
@@ -350,13 +382,14 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @param {Object} message The message received
    * @private
    */
+  @action
   _handleSocketMessage(event, message) {
     if (!isAlive(this)) {
       return;
     }
     this.trigger(
       event + (message && message.verb ? '.' + message.verb : ''),
-      message
+      message,
     );
   }
 
@@ -370,6 +403,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @method _handleSocketReady
    * @private
    */
+  @action
   _handleSocketReady() {
     if (!isAlive(this)) {
       return;
@@ -382,11 +416,11 @@ export default class SailsSocketService extends Service.extend(Evented) {
       if (this._sailsSocket._raw) {
         this._sailsSocket._raw.addEventListener(
           'connect',
-          bind(this, '_handleSocketConnect')
+          bind(this, '_handleSocketConnect'),
         );
         this._sailsSocket._raw.addEventListener(
           'disconnect',
-          bind(this, '_handleSocketDisconnect')
+          bind(this, '_handleSocketDisconnect'),
         );
         if (this._sailsSocket._raw.connected) {
           next(this, '_handleSocketConnect');
@@ -405,6 +439,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @method _handleSocketConnect
    * @private
    */
+  @action
   _handleSocketConnect() {
     if (!isAlive(this)) {
       return;
@@ -421,6 +456,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @method _handleSocketDisconnect
    * @private
    */
+  @action
   _handleSocketDisconnect() {
     if (!isAlive(this)) {
       return;
@@ -437,6 +473,7 @@ export default class SailsSocketService extends Service.extend(Evented) {
    * @method _load
    * @private
    */
+  @action
   _load() {
     if (!this._loaded) {
       if (window.io && io.sails && io.sails.emberDataSailsReady) {

@@ -1,8 +1,8 @@
-import { A } from "@ember/array";
-import RESTAdapter from "@ember-data/adapter/rest";
+import { A } from '@ember/array';
+import RESTAdapter from '@ember-data/adapter/rest';
 // eslint-disable-next-line ember/no-computed-properties-in-native-classes
-import { computed } from "@ember/object";
-import SailsBaseAdapter from "./sails-base";
+import { computed } from '@ember/object';
+import SailsBaseAdapter from './sails-base';
 
 /**
  * Adapter for SailsJS HTTP REST API
@@ -19,7 +19,7 @@ export default class SailsRest extends SailsBaseAdapter {
    * @property csrfTokenUrl
    * @type String
    */
-  @computed("host", "namespace", "csrfTokenPath")
+  @computed('host', 'namespace', 'csrfTokenPath')
   csrfTokenUrl(key, value) {
     let csrfTokenUrl, csrfTokenPath;
     if (arguments.length > 1) {
@@ -30,13 +30,13 @@ export default class SailsRest extends SailsBaseAdapter {
       csrfTokenPath = this.csrfTokenPath;
       csrfTokenUrl = A([
         this.host,
-        csrfTokenPath.charAt(0) === "/" ? null : this.namespace,
-        csrfTokenPath.replace(/^\//, ""),
+        csrfTokenPath.charAt(0) === '/' ? null : this.namespace,
+        csrfTokenPath.replace(/^\//, ''),
       ])
         .filter(Boolean)
-        .join("/");
+        .join('/');
       if (!/^(https?:)?\/\//.test(csrfTokenUrl)) {
-        csrfTokenUrl = "/" + csrfTokenUrl;
+        csrfTokenUrl = '/' + csrfTokenUrl;
       }
     }
     return csrfTokenUrl;
@@ -51,11 +51,11 @@ export default class SailsRest extends SailsBaseAdapter {
    * @param {String} url
    * @param {String} method
    * @param {Object} options
-   * @returns {Ember.RSVP.Promise}
+   * @returns {Promise}
    * @private
    */
   _request(out, url, method, options) {
-    out.protocol = "http";
+    out.protocol = 'http';
     return this._restAdapter_ajax.call(this, url, method, options);
   }
 
@@ -64,12 +64,12 @@ export default class SailsRest extends SailsBaseAdapter {
    *
    * @since 0.0.4
    * @method _fetchCSRFToken
-   * @return {Ember.RSVP.Promise} Returns the promise resolving the CSRF token
+   * @return {Promise} Returns the promise resolving the CSRF token
    * @private
    */
   _fetchCSRFToken() {
     return this._restAdapter_ajax
-      .call(this, this.csrfTokenUrl, "get")
+      .call(this, this.csrfTokenUrl, 'get')
       .then(function (tokenObject) {
         return tokenObject._csrf;
       });
@@ -84,7 +84,7 @@ export default class SailsRest extends SailsBaseAdapter {
    * @param {String} url
    * @param {String} type The request type GET, POST, PUT, DELETE etc.
    * @param {Object} hash
-   * @return {Ember.RSVP.Promise} promise
+   * @return {Promise} promise
    */
   _restAdapter_ajax = RESTAdapter.proto().ajax;
 }
